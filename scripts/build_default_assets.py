@@ -20,6 +20,11 @@ import struct
 from datetime import datetime
 
 
+def safe_log_value(value):
+    """Make log output safe for Windows consoles using legacy encodings."""
+    return str(value).encode("ascii", errors="backslashreplace").decode("ascii")
+
+
 # =============================================================================
 # Pack model functions (from pack_model.py)
 # =============================================================================
@@ -442,7 +447,7 @@ def read_wakenet_from_sdkconfig(sdkconfig_path):
         return []
         
     models = []
-    with io.open(sdkconfig_path, "r") as f:
+    with io.open(sdkconfig_path, "r", encoding="utf-8") as f:
         for label in f:
             label = label.strip("\n")
             if 'CONFIG_SR_WN' in label and '#' not in label[0]:
@@ -467,7 +472,7 @@ def read_multinet_from_sdkconfig(sdkconfig_path):
         print(f"Warning: sdkconfig file not found: {sdkconfig_path}")
         return []
         
-    with io.open(sdkconfig_path, "r") as f:
+    with io.open(sdkconfig_path, "r", encoding="utf-8") as f:
         models_string = ''
         for label in f:
             label = label.strip("\n")
@@ -528,7 +533,7 @@ def read_wake_word_type_from_sdkconfig(sdkconfig_path):
         'wake_word_disabled': False
     }
     
-    with io.open(sdkconfig_path, "r") as f:
+    with io.open(sdkconfig_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip("\n")
             if line.startswith('#'):
@@ -557,7 +562,7 @@ def read_custom_wake_word_from_sdkconfig(sdkconfig_path):
         return None
         
     config_values = {}
-    with io.open(sdkconfig_path, "r") as f:
+    with io.open(sdkconfig_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip("\n")
             if line.startswith('#') or '=' not in line:
@@ -728,7 +733,7 @@ def build_assets_integrated(wakenet_model_paths, multinet_model_paths, text_font
         config_path = generate_config_json(temp_build_dir, assets_dir)
         
         # Load config and pack assets
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             config_data = json.load(f)
         
         # Use simplified packing function
@@ -854,7 +859,11 @@ def main():
                 }
             ]
         }
-        print(f"  custom wake word: {custom_wake_word_config['wake_word']} ({custom_wake_word_config['display']})")
+        print(
+            "  custom wake word: "
+            f"{safe_log_value(custom_wake_word_config['wake_word'])} "
+            f"({safe_log_value(custom_wake_word_config['display'])})"
+        )
         print(f"  wake word language: {language}")
         print(f"  wake word threshold: {custom_wake_word_config['threshold']}")
     
